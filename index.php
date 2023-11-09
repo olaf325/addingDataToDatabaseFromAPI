@@ -11,9 +11,6 @@
 <body>
 <?php
 // sprawdzanie poprawnej ilości rekordów: SELECT COUNT(*) FROM api_values WHERE api = '3'
-// zapytania nie starsze niż 7 dni
-// nie grupować wedlug api
-// podac api przed rekordem
 echo " <pre>"; // "nie jest jak w matrix"
 $xml = new DOMDocument();
 $db = mysqli_connect("localhost", "root", "", "test") or die("Unable to connect with the database");
@@ -88,16 +85,24 @@ while ($row = mysqli_fetch_assoc($query)) {
         echo"</table>";
     } else echo "the file is empty or is not a string.<br> ";
 }
-$mq = mysqli_query($db, "SELECT title, description, url FROM api_values INNER JOIN urls ON api_values.api = urls.id WHERE DAY(edition.update) > (DAY(CURRENT_TIMESTAMP()) - 7)");
+$mq = mysqli_query($db, "SELECT `api_values`.title, description, `urls`.api_title FROM `api_values` INNER JOIN `urls` ON `api_values`.api = `urls`.id INNER JOIN `edition` ON `edition`.idu = `api_values`.date_update WHERE `api_values`.date_addition between date_sub(now(),INTERVAL 1 WEEK) and now()");
+echo "<table class='table'>";
+while($row = mysqli_fetch_assoc($mq)){
+    $title = $row['title'];
+    $description = $row['description'];
+    $url = $row['api_title'];
+    echo "<tr>
+        <td class='cell tableHeader'>".$url."</td>
+        <td class='cell title'>".$title."</td>
+        <td class='cell description'>".str_replace('\\', '', filter_var($description, FILTER_SANITIZE_STRING))."</td>
+        </tr>";
+}
+echo "</table>";
 echo "</div>";
 $mq = mysqli_query($db, "UPDATE edition SET date_update = CURRENT_TIMESTAMP() WHERE idu = 1");
 
 mysqli_close($db);
 echo "</pre>";
-//                        echo "<tr>
-//                            <td class='cell title'>".$preparedTitle[$titleIndex]."</td>
-//                            <td class='cell description'>".str_replace('\\', '', filter_var($descriptionWithSlashes, FILTER_SANITIZE_STRING))."</td>
-//                            </tr>";
 ?>
 </body>
 </html>
