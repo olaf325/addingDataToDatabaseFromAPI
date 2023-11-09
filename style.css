@@ -1,0 +1,41 @@
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+body {
+    background-color: #000000;
+    color: #dadada;
+}
+#container {
+    width: 100%;
+    padding: 0.1vh 0.1vw;
+}
+.table {
+    width: 100%;
+}
+.cell {
+    border: 1px solid #525252;
+    padding: 0.5vh 1vw;
+    height: 2vh;
+    line-height: 2vh;
+    overflow: hidden;
+}
+.cell.tableHeader {
+    min-width: 7vw;
+    max-width: 7.01vw;
+    text-align: center;
+}
+.cell.title {
+    color: red;
+    min-width: 20vw;
+    max-width: 20.01vw;
+}
+.cell.description {
+    color: #e1cd48;
+    min-width: 72.97vw;
+    max-width: 72.98vw;
+}
+::-webkit-scrollbar {
+    width: 1px;
+}
