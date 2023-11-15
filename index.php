@@ -10,8 +10,7 @@
 </head>
 <body>
 <?php
-// sprawdzanie poprawnej ilości rekordów: SELECT COUNT(*) FROM api_values WHERE api = '3'
-echo " <pre>"; // "nie jest jak w matrix"
+echo " <pre>";
 $xml = new DOMDocument();
 $db = mysqli_connect("localhost", "root", "", "test") or die("Unable to connect with the database");
 $query = mysqli_query($db, "SELECT id, url FROM urls");
@@ -20,11 +19,13 @@ echo "<p>ostatnio dodane rekordy: </p>";
 while ($row = mysqli_fetch_assoc($query)) {
     $xmlUrl = $row['url'];
     $xmlId = $row['id'];
-//    echo "<table class='table'>";
-//    echo "<tr class='row'><td class='cell tableHeader' colspan='2'> url: <u>".$xmlUrl."</u></td></tr>";
     if (is_string($xmlUrl) && !empty($xmlUrl)) {
         $xml = simplexml_load_file($xmlUrl);
         if ($xml) {
+            $preparedDescription = array();
+            $preparedTitle = array();
+            $md5 = array();
+            $ebayNotes = array();
             $channel = $xml -> xpath("//channel/item/title");
             $date = $xml -> xpath("//pubDate");
             $channelItems = $xml -> xpath("//channel/item");
@@ -32,9 +33,6 @@ while ($row = mysqli_fetch_assoc($query)) {
             if($xmlUrl == 'https://developer.ebay.com/rss/api-deprecation'){
                 $ebayNotes = $xml -> xpath("//channel/item/notes");
             }
-            $preparedTitle = array();
-            $preparedDescription = array();
-            $md5 = array();
             foreach ($channelItems as $item) {
                 $md5[] = md5($item->asXML());
             }
@@ -68,12 +66,8 @@ while ($row = mysqli_fetch_assoc($query)) {
                     }
                     if (isset($preparedDate)) {
                         $descriptionWithSlashes = addcslashes($preparedDescription[$titleIndex], '<>/');
-                        $updateDate = 1;
-                        // przygotowywuje kwerende do wykonania
-                        $statement  = $db->prepare("INSERT INTO `api_values` (`title`, `description`, `date_addition`, `md5`, `date_update`, `api`) VALUES (?, ?, ?, ?, ?, ?)");
-                        // ustawia wartosci zmiennych na s - string oraz i - int zabezpiecza przed dodaniem wartosci o niepoprawnych typie danych
-                        $statement->bind_param("ssssii", $preparedTitle[$titleIndex], $descriptionWithSlashes, $preparedDate, $md5[$titleIndex], $updateDate, $xmlId);
-                        // jezeli nie uda sie dodac danych do bazy wypisanie erroru i nie dodawanie błędnych danych
+                        $statement  = $db->prepare("INSERT INTO `api_values` (`title`, `description`, `date_addition`, `md5`, `api`) VALUES (?, ?, ?, ?, ?, ?)");
+                        $statement->bind_param("ssssi", $preparedTitle[$titleIndex], $descriptionWithSlashes, $preparedDate, $md5[$titleIndex],  $xmlId);
                         if (!$statement->execute()) {
                             echo "Error inserting data: " . $statement->error;
                         }
@@ -85,7 +79,8 @@ while ($row = mysqli_fetch_assoc($query)) {
         echo"</table>";
     } else echo "the file is empty or is not a string.<br> ";
 }
-$mq = mysqli_query($db, "SELECT `api_values`.title, description, `urls`.api_title FROM `api_values` INNER JOIN `urls` ON `api_values`.api = `urls`.id INNER JOIN `edition` ON `edition`.idu = `api_values`.date_update WHERE `api_values`.date_addition between date_sub(now(),INTERVAL 1 WEEK) and now()");
+$mq = mysqli_query($db, "SELECT `api_values`.title, description, `urls`.api_title, `api_values`.md5 FROM `api_values` INNER JOIN `urls` ON `api_values`.api = `urls`.id WHERE `api_values`.date_addition between date_sub(now(),INTERVAL 1 WEEK) and now()");
+
 echo "<table class='table'>";
 while($row = mysqli_fetch_assoc($mq)){
     $title = $row['title'];
@@ -93,13 +88,12 @@ while($row = mysqli_fetch_assoc($mq)){
     $url = $row['api_title'];
     echo "<tr>
         <td class='cell tableHeader'>".$url."</td>
-        <td class='cell title'>".$title."</td>
-        <td class='cell description'>".str_replace('\\', '', filter_var($description, FILTER_SANITIZE_STRING))."</td>
+        <td class='cell title' ><p>".$title."</p></td>
+        <td class='cell description'><p>".str_replace('\\', '', filter_var($description, FILTER_SANITIZE_STRING))."</p></td>
         </tr>";
 }
 echo "</table>";
 echo "</div>";
-$mq = mysqli_query($db, "UPDATE edition SET date_update = CURRENT_TIMESTAMP() WHERE idu = 1");
 
 mysqli_close($db);
 echo "</pre>";
