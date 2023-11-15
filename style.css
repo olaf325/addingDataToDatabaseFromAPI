@@ -13,10 +13,11 @@ body {
 }
 .table {
     width: 100%;
+    border-spacing: 0.3vh 0.5vh;
 }
 .cell {
     border: 1px solid #525252;
-    padding: 0.5vh 1vw;
+    padding: 1vh 1vw;
     height: 2vh;
     line-height: 2vh;
     overflow: hidden;
@@ -25,17 +26,19 @@ body {
     min-width: 7vw;
     max-width: 7.01vw;
     text-align: center;
+    letter-spacing: 1px;
 }
 .cell.title {
-    color: red;
+    color: #ec1d1d;
     min-width: 20vw;
     max-width: 20.01vw;
+    font-weight: bolder;
 }
 .cell.description {
     color: #e1cd48;
-    min-width: 72.97vw;
-    max-width: 72.98vw;
+    min-width: 69.94vw;
+    max-width: 69.95vw;
 }
 ::-webkit-scrollbar {
-    width: 1px;
+    width: 0;
 }
